@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #define STRING_THERE_ARE_DUPLICATE_SNOWFLAKES "Twin snowflakes found.\n"
 #define STRING_SNOWFLAKES_ARE_UNIQUE "No two snowflakes are alike.\n"
 #define LEN_SNOWFLAKE 6
+#define LARGEST_POSSIBLE_SUM 6000
 
 int get_num_snowflakes_from_stdin(void)
 {
-    int num_snowflakes;
+    int num_snowflakes; // this is allocated on the stack
     scanf("%d", &num_snowflakes);
     return num_snowflakes;
 }
@@ -58,11 +60,36 @@ bool they_are_equal(int sf1[LEN_SNOWFLAKE], int sf2[LEN_SNOWFLAKE])
     return false;
 }
 
-void populate_snowflakes_from_stdin(int snowflakes[][LEN_SNOWFLAKE], int num_snowflakes)
+int get_hash(int snowflake[LEN_SNOWFLAKE])
 {
-    for (int i = 0; i < num_snowflakes; i++)
+    int sum;
+    for (int i = 0; i < LEN_SNOWFLAKE; i++)
+    {
+        sum += snowflake[i];
+    }
+    return sum;
+}
+
+typedef struct Entry {
+    int snowflake[LEN_SNOWFLAKE];
+    struct Entry * next;
+} Entry;
+
+void populate_snowflakes_from_stdin(Entry * snowflakes[LARGEST_POSSIBLE_SUM], int num_snowflakes)
+{
+    int hash;
+    Entry * snowflake;
+    for (int _ = 0; _ < num_snowflakes; _++)
+    {
+        snowflake = malloc(sizeof(Entry));
         for (int j = 0; j < LEN_SNOWFLAKE; j++)
-            scanf("%d", &snowflakes[i][j]);
+        {
+            scanf("%d", &snowflake->snowflake[j]);
+        }
+        hash = get_hash(snowflake->snowflake);
+        snowflake->next = snowflakes[hash];
+        snowflakes[hash] = snowflake;
+    }
 }
 
 int main(void)
@@ -71,17 +98,17 @@ int main(void)
     //   - the tips add up to the same amount
     //   - try to skip any array (hash map) slots with one or fewer elements stored
     int num_snowflakes = get_num_snowflakes_from_stdin();
-    int snowflakes[num_snowflakes][LEN_SNOWFLAKE];
+    Entry * snowflakes[LARGEST_POSSIBLE_SUM]; // 48MB of memory, 6 million slots 
     populate_snowflakes_from_stdin(snowflakes, num_snowflakes);
 
-    for (int i = 0; i < num_snowflakes; i++)
-        for (int j = i + 1; j < num_snowflakes; j++)
-            if (they_are_equal(snowflakes[i], snowflakes[j]))
-            {
-                printf(STRING_THERE_ARE_DUPLICATE_SNOWFLAKES);
-                return 0;
-            }
+    // for (int i = 0; i < num_snowflakes; i++)
+    //     for (int j = i + 1; j < num_snowflakes; j++)
+    //         if (they_are_equal(snowflakes[i], snowflakes[j]))
+    //         {
+    //             printf(STRING_THERE_ARE_DUPLICATE_SNOWFLAKES);
+    //             return 0;
+    //         }
 
-    printf(STRING_SNOWFLAKES_ARE_UNIQUE);
+    // printf(STRING_SNOWFLAKES_ARE_UNIQUE);
     return 0;
 }
